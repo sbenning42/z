@@ -1,0 +1,9 @@
+<section>
+  <mat-toolbar class="header" color="primary">
+    <span style="flex: 1"></span>
+    <section *ngFor="let link of links" class="link" (click)="select(link)">
+      <a mat-button>{{ link.name }}</a>
+      <mat-icon>{{ link.icon }}</mat-icon>
+    </section>
+  </mat-toolbar>
+</section>

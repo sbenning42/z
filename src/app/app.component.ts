@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AppStore } from './core/state/app/app.store';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,9 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'starter';
+  constructor(
+    public app: AppStore
+  ) {
+    this.app.dispatch(new this.app.Z.initialize.Dispatch());
+  }
 }
