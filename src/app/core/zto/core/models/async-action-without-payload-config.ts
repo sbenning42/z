@@ -1,8 +1,9 @@
 import { ActionSchema } from "../types/action-schema";
 import { StateActionReducer } from "../types/state-action-reducer";
 import { HeadersType } from '../types/headers-type';
+import { ActionConfig } from "./action-config";
 
-export class ActionConfig<ThisState, ThisActionSchema extends ActionSchema<any, any>> {
+export class AsyncActionWithoutPayloadConfig<ThisState, ThisActionSchema extends ActionSchema<any, any>> {
     constructor(
         public type: string,
         public reducer: ThisActionSchema['IsAsync'] extends false
@@ -22,7 +23,7 @@ export class ActionConfig<ThisState, ThisActionSchema extends ActionSchema<any, 
                 cancel?: HeadersType,
             } = [] as any,
         public hasPayload: ThisActionSchema['HasPayload'] = false,
-        public isAsync: ThisActionSchema['IsAsync'] = false,
+        public isAsync: ThisActionSchema['IsAsync'] = true,
     ) {
     }
 }

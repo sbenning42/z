@@ -7,5 +7,5 @@ export type ActionSchema<
     Payload: Payload,
     Result: Result,
     HasPayload: HasPayload,
-IsAsync: IsAsync,
+    IsAsync: IsAsync,
 };

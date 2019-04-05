@@ -16,7 +16,7 @@ import { ZtoModule } from './zto';
     HttpClientModule,
     InMemoryWebApiModule.forRoot(InMemoryDataService),
     ZtoModule,
-    // StateModule,
+    StateModule,
     SharedModule,
   ],
   declarations: [],

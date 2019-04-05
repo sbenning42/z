@@ -4,6 +4,7 @@ import {
     ActionConfig,
     StoreConfig
 } from "../../zto";
+import { AsyncActionWithoutPayloadConfig } from "../../zto/core/models/async-action-without-payload-config";
 
 // Inner state interfaces
 export interface Entries {
@@ -43,7 +44,7 @@ export const storageConfig = () => new StoreConfig<StorageState, StorageSchema>(
     // All possible store actions
     {
 
-        get: new ActionConfig(
+        get: new AsyncActionWithoutPayloadConfig(
             '[STORAGE] Get',
             {
                 response: (state, { payload }) => ({
