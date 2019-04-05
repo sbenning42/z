@@ -1,17 +1,18 @@
 import {
     ActionsSchema,
     ActionSchema,
-    ActionConfig,
+    AsyncActionWithoutPayloadConfig,
+    AsyncActionWithPayloadConfig,
     StoreConfig
 } from "../../zto";
-import { AsyncActionWithoutPayloadConfig } from "../../zto/core/models/async-action-without-payload-config";
 
-// Inner state interfaces
+// Helper interfaces for this State
 export interface Entries {
     [x: string]: any;
 }
 
 // State interface
+// NOTE: a State interface MUST NOT HAVE a 'state' property
 export interface StorageState {
     loaded: boolean;
     entries: Entries;
@@ -20,9 +21,10 @@ export interface StorageState {
 // State actions schemas
 // an ActionSchema can be one of:
 //      - ActionSchema (Action is synchronous and it does not need a payload)
-//      - ActionSchema<any> (Action is synchronous and it does need a payload of type 'any')
-//      - ActionSchema<void, any> (Action is asynchronous, it does not need a payload and the response is of type 'any')
-//      - ActionSchema<any, any> (Action is asynchronous, it does need a payload of type 'any' and the response is of type 'any')
+//      - ActionSchema<T> (Action is synchronous and it does need a payload of type T)
+//      - ActionSchema<void, U> (Action is asynchronous, it does not need a payload and the response is of type U)
+//      - ActionSchema<T, U> (Action is asynchronous, it does need a payload of type T and the response is of type U)
+// NOTE: An asynchronous action must have a response type != (null | undefined | void) // pass {} instead 
 export interface StorageSchema extends ActionsSchema {
     get: ActionSchema<void, Entries>;
     save: ActionSchema<Entries, Entries>;
@@ -32,7 +34,7 @@ export interface StorageSchema extends ActionsSchema {
 
 export const storageConfig = () => new StoreConfig<StorageState, StorageSchema>(
 
-    // Store selector
+    // Store selector (must be UNIQUE)
     'STORAGE',
 
     // Store initial state
@@ -44,22 +46,29 @@ export const storageConfig = () => new StoreConfig<StorageState, StorageSchema>(
     // All possible store actions
     {
 
-        get: new AsyncActionWithoutPayloadConfig(
+        // You can choose between SyncActionWithoutPayloadConfig, SyncActionWithPayloadConfig,
+        // AsyncActionWithoutPayloadConfig and AsyncActionWithPayloadConfig factory functions
+        // to easily create action's config
+        // type parameters are optional but, they can infer types for reducer functions
+        // this can be really handy
+        get: new AsyncActionWithoutPayloadConfig<StorageState, StorageSchema['get']>(
+            // Choose it an UNIQUE name
             '[STORAGE] Get',
+            // If it's a synchronous action, directly pass it the reducer
+            // If it's an async one, give it an object we up to four properties
+            // from request, response, error and cancel associated with the particular reducer you want to call
             {
                 response: (state, { payload }) => ({
-                    ...state,
                     loaded: true,
                     entries: payload
                 }),
             }
         ),
 
-        save: new ActionConfig(
+        save: new AsyncActionWithPayloadConfig<StorageState, StorageSchema['save']>(
             '[STORAGE] Save',
             {
                 response: (state, { payload }) => ({
-                    ...state,
                     entries: {
                         ...state.entries,
                         ...payload
@@ -68,11 +77,10 @@ export const storageConfig = () => new StoreConfig<StorageState, StorageSchema>(
             }
         ),
 
-        remove: new ActionConfig(
+        remove: new AsyncActionWithPayloadConfig<StorageState, StorageSchema['remove']>(
             '[STORAGE] Remove',
             {
                 response: (state, { payload }) => ({
-                    ...state,
                     entries: Object.entries(state.entries)
                         .filter(([key]) => !payload.includes(key))
                         .reduce((entries, [key, value]) => ({ ...entries, [key]: value }), {})
@@ -80,11 +88,10 @@ export const storageConfig = () => new StoreConfig<StorageState, StorageSchema>(
             }
         ),
 
-        clear: new ActionConfig(
+        clear: new AsyncActionWithoutPayloadConfig<StorageState, StorageSchema['clear']>(
             '[STORAGE] Clear',
             {
-                response: state => ({
-                    ...state,
+                response: () => ({
                     entries: {}
                 }),
             }

@@ -3,27 +3,22 @@ import { StateActionReducer } from "../types/state-action-reducer";
 import { HeadersType } from '../types/headers-type';
 import { ActionConfig } from "./action-config";
 
-export class AsyncActionWithoutPayloadConfig<ThisState, ThisActionSchema extends ActionSchema<any, any>> {
+export class AsyncActionWithoutPayloadConfig<ThisState, ThisActionSchema extends ActionSchema<any, any, false, true>> extends ActionConfig<ThisState, ThisActionSchema> {
     constructor(
-        public type: string,
-        public reducer: ThisActionSchema['IsAsync'] extends false
-            ? StateActionReducer<ThisState, ThisActionSchema['Payload']>
-            : {
-                request?: StateActionReducer<ThisState, ThisActionSchema['Payload']>,
-                response?: StateActionReducer<ThisState, ThisActionSchema['Result']>,
-                error?: StateActionReducer<ThisState, Error>,
-                cancel?: StateActionReducer<ThisState, undefined>,
-            },
-        public staticHeaders: ThisActionSchema['IsAsync'] extends false
-            ? HeadersType
-            : {
-                request?: HeadersType,
-                response?: HeadersType,
-                error?: HeadersType,
-                cancel?: HeadersType,
-            } = [] as any,
-        public hasPayload: ThisActionSchema['HasPayload'] = false,
-        public isAsync: ThisActionSchema['IsAsync'] = true,
+        type: string,
+        reducer: {
+            request?: StateActionReducer<ThisState, ThisActionSchema['Payload']>,
+            response?: StateActionReducer<ThisState, ThisActionSchema['Result']>,
+            error?: StateActionReducer<ThisState, Error>,
+            cancel?: StateActionReducer<ThisState, undefined>,
+        },
+        staticHeaders: {
+            request?: HeadersType,
+            response?: HeadersType,
+            error?: HeadersType,
+            cancel?: HeadersType,
+        } = [] as any,
     ) {
+        super (type, reducer as any, staticHeaders as any, false, true);
     }
 }

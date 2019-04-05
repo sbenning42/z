@@ -7,8 +7,6 @@ import {
 } from './storage.config';
 import { Effect } from '@ngrx/effects';
 
-
-
 @Injectable({
   providedIn: 'root'
 })
