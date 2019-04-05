@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { switchMap } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
-import { uuid } from '../../z/core/tools';
+import { uuid } from '../../zto';
 
 export interface Credentials {
   email: string;
