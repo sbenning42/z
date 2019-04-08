@@ -48,6 +48,14 @@ export const grabHeaderIds = <D>(...ids: string[]) => (action: Action) => action
     && action.headers
         .filter(header => ids.includes(header.id)) as Array<Header<D>>;
 
+
+export const hasHeaders = (...types: string[]) => (action: Action) => action.headers
+    && action.headers.some(header => types.includes(header.type));
+export const hasHeaderIds = (...ids: string[]) => (action: Action) => action.headers
+    && action.headers.some(header => ids.includes(header.id));
+
+
+
 export class Document<D = any> extends Action<D> {}
 export class Event<P = any> extends Action<P> {}
 export class CommandRequest<P = any> extends Action<P> {}
@@ -317,11 +325,11 @@ export class ZStoreConfig<State, Schema extends ZSchema, Selectors extends ZSele
 }
 
 export type ZDispatch<Schema extends ZSchema> = {
-    [Key in keyof Schema]: (payload: Schema[Key]['_payload'], headers?: HeaderLikes) => void;
+    [Key in keyof Schema]: (payload: Schema[Key]['_payload'], headers?: HeaderLikes, asyncData?: AsyncData) => void;
 }
 
 export type ZFactories<Schema extends ZSchema> = {
-    [Key in keyof Schema]: (payload: Schema[Key]['_payload'], headers?: HeaderLikes) => Action<Schema[Key]['_payload']>;
+    [Key in keyof Schema]: (payload: Schema[Key]['_payload'], headers?: HeaderLikes, asyncData?: AsyncData) => Action<Schema[Key]['_payload']>;
 }
 
 export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends ZSelectors<State> = ZSelectors<State>> {
@@ -353,7 +361,7 @@ export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends Z
         }) as StateSelectors<State, Selectors>;
         this.dispatchs = Object.entries(config.actions).reduce((dispatch, [name]) => ({
             ...dispatch,
-            [name]: (payload: Schema[string]['_payload'], headers?: HeaderLikes) => {
+            [name]: (payload: Schema[string]['_payload'], headers?: HeaderLikes, asyncData?: AsyncData) => {
                 const action = this.actions[name];
                 switch (action._type) {
                     case SYMBOLS.DOCUMENT:
@@ -366,7 +374,7 @@ export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends Z
                         break;
                     case SYMBOLS.COMMAND:
                         const command = action as CommandClass<State, Schema[string]['_payload'], Schema[string]['_result']>;
-                        store$.dispatch(new command.Request(payload, headers));
+                        store$.dispatch(new command.Request(payload, headers, asyncData));
                         break;
                     default:
                         return;
@@ -375,7 +383,7 @@ export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends Z
         }), {}) as ZDispatch<Schema>;
         this.factories = Object.entries(config.actions).reduce((dispatch, [name]) => ({
             ...dispatch,
-            [name]: (payload: Schema[string]['_payload'], headers?: HeaderLikes) => {
+            [name]: (payload: Schema[string]['_payload'], headers?: HeaderLikes, asyncData?: AsyncData) => {
                 const action = this.actions[name];
                 switch (action._type) {
                     case SYMBOLS.DOCUMENT:
@@ -386,7 +394,7 @@ export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends Z
                         return new event.Fire(payload, headers);
                     case SYMBOLS.COMMAND:
                         const command = action as CommandClass<State, Schema[string]['_payload'], Schema[string]['_result']>;
-                        return new command.Request(payload, headers);
+                        return new command.Request(payload, headers, asyncData);
                     default:
                         return;
                 }
@@ -402,11 +410,13 @@ export class ZStore<State = {}, Schema extends ZSchema = {}, Selectors extends Z
             switch (thisAction._type) {
                 case SYMBOLS.DOCUMENT: {
                     const reducer = thisAction.reducer as DocumentReducer<State, Schema[string]['_payload']>;
-                    return { ...state as any, ...reducer(state, action.payload) as any };
+                    const update = reducer(state, action.payload);
+                    return Object.keys(update).length > 0 ? { ...state as any, ...update as any } : state;
                 }
                 case SYMBOLS.EVENT: {
                     const reducer = thisAction.reducer as EventReducer<State, Schema[string]['_payload']>;
-                    return { ...state as any, ...reducer(state, action.payload) as any };
+                    const update = reducer(state, action.payload);
+                    return Object.keys(update).length > 0 ? { ...state as any, ...update as any } : state;
                 }
                 case SYMBOLS.COMMAND: {
                     const command = thisAction as CommandClass<State, Schema[string]['_payload'], Schema[string]['_result']>;
@@ -474,7 +484,7 @@ export function onRequest(request: CommandRequest) {
     const [async] = grabHeaders(SYMBOLS.ASYNC_HEADER)(request);
     const type = request.type;
     return (actions$: Observable<Action>) => actions$.pipe(
-        filter(action => action.type === type && !!grabHeaderIds(async.id)(action)),
+        filter(action => action.type === type && hasHeaderIds(async.id)(action)),
         take(1),
     );
 }
@@ -482,7 +492,7 @@ export function onFinish(request: CommandRequest) {
     const [async] = grabHeaders(SYMBOLS.ASYNC_HEADER)(request);
     const type = request.type;
     return (actions$: Observable<Action>) => actions$.pipe(
-        filter(action => action.type !== type && !!grabHeaderIds(async.id)(action)),
+        filter(action => action.type !== type && hasHeaderIds(async.id)(action)),
         take(1),
     );
 }
@@ -491,14 +501,14 @@ export function onCancel(request: CommandRequest) {
     const type = request.type.split(SYMBOLS.ASYNC)[0];
     const others = (actions$: Observable<Action>) => merge(
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncSuccess(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncSuccess(type) && hasHeaderIds(async.id)(action)),
         ),
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncFailure(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncFailure(type) && hasHeaderIds(async.id)(action)),
         ),
     );
     return (actions$: Observable<Action>) => actions$.pipe(
-        filter(action => action.type === typeAsAsyncCancel(type) && !!grabHeaderIds(async.id)(action)),
+        filter(action => action.type === typeAsAsyncCancel(type) && hasHeaderIds(async.id)(action)),
         take(1),
         takeUntil(others(actions$))
     );
@@ -508,14 +518,14 @@ export function onSuccess(request: CommandRequest) {
     const type = request.type.split(SYMBOLS.ASYNC)[0];
     const others = (actions$: Observable<Action>) => merge(
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncCancel(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncCancel(type) && hasHeaderIds(async.id)(action)),
         ),
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncFailure(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncFailure(type) && hasHeaderIds(async.id)(action)),
         ),
     );
     return (actions$: Observable<Action>) => actions$.pipe(
-        filter(action => action.type === type && !!grabHeaderIds(async.id)(action)),
+        filter(action => action.type === type && hasHeaderIds(async.id)(action)),
         take(1),
         takeUntil(others(actions$))
     );
@@ -525,14 +535,14 @@ export function onFailure(request: CommandRequest) {
     const type = request.type.split(SYMBOLS.ASYNC)[0];
     const others = (actions$: Observable<Action>) => merge(
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncSuccess(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncSuccess(type) && hasHeaderIds(async.id)(action)),
         ),
         actions$.pipe(
-            filter(action => action.type === typeAsAsyncCancel(type) && !!grabHeaderIds(async.id)(action)),
+            filter(action => action.type === typeAsAsyncCancel(type) && hasHeaderIds(async.id)(action)),
         ),
     );
     return (actions$: Observable<Action>) => actions$.pipe(
-        filter(action => action.type === type && !!grabHeaderIds(async.id)(action)),
+        filter(action => action.type === type && hasHeaderIds(async.id)(action)),
         take(1),
         takeUntil(others(actions$))
     );
@@ -598,7 +608,7 @@ interface TestState {
     test: string;
 }
 
-// Typing for "Action"s you can do on this Store (State / Plain Object described earlier)
+// Typing for "Action"s you can do on this Store
 interface TestSchema extends ZSchema {
     test: ZDocument<string>;
     asyncTest: ZCommand<string, string>;
@@ -620,7 +630,7 @@ export function test(store$: Store<any>, actions$: Actions) {
             asyncTest: commandFactory('[TEST] Async Test', {
                 onSuccess: (state, test) => ({})
             }),
-            tested: eventFactory('[TEST] Tested', NOOP),
+            tested: eventFactory('[TEST] Tested'),
         },
         selectors: {
             testLength: new Selector(state => state && state.test && state.test.length)

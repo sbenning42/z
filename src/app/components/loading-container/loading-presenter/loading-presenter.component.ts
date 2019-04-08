@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
+import { AppLoading } from 'src/app/core/stores/app/config';
 
 @Component({
   selector: 'app-loading-presenter',
@@ -6,6 +7,8 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./loading-presenter.component.css']
 })
 export class LoadingPresenterComponent implements OnInit {
+
+  @Input() loadings: AppLoading[];
 
   constructor() { }
 

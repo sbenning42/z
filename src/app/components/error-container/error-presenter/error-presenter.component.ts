@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { AppError } from 'src/app/core/stores/app/config';
 
 @Component({
   selector: 'app-error-presenter',
@@ -7,8 +8,7 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class ErrorPresenterComponent implements OnInit {
 
-  @Input() title: string;
-  @Input() message: string;
+  @Input() errors: AppError[];
 
   constructor() { }
 

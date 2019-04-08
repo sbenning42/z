@@ -9,6 +9,7 @@ import {
     ZEvent,
     ZCommand
 } from "../../z-store/z-store";
+import { appHeader, SYMBOLS } from "../app/config";
 
 export const type = 'AUTH';
 
@@ -60,23 +61,53 @@ export function config() {
         initial,
         {
             
-            credentials: documentFactory('[AUTH] CREDENTIALS', (state, credentials) => ({ credentials })),
+            credentials: documentFactory(
+                '[AUTH] CREDENTIALS',
+                (state, credentials) => ({ credentials })
+            ),
             
-            user: documentFactory('[AUTH] USER', (state, user) => ({ user })),
+            user: documentFactory(
+                '[AUTH] USER',
+                (state, user) => ({ user })
+            ),
             
-            token: documentFactory('[AUTH] TOKEN', (state, token) => ({ token })),
+            token: documentFactory(
+                '[AUTH] TOKEN',
+                (state, token) => ({ token })
+            ),
             
-            register: commandFactory('[AUTH] REGISTER', {
-                onSuccess: (state, user) => ({ user }),
-            }),
+            register: commandFactory(
+                '[AUTH] REGISTER',
+                {
+                    onSuccess: (state, user) => ({ user }),
+                },
+                {
+                    request: [appHeader(SYMBOLS.LOAD_ASYNC_HEADER)('Registering User ...')],
+                    failure: [appHeader(SYMBOLS.ERROR_ASYNC_HEADER)('Registering User Failed ...')]
+                }
+            ),
             
-            authenticate: commandFactory('[AUTH] AUTHENTICATE', {
-                onSuccess: (state, { user, token }) => ({ authentified: true, user, token }),
-            }),
+            authenticate: commandFactory(
+                '[AUTH] AUTHENTICATE',
+                {
+                    onSuccess: (state, { user, token }) => ({ authentified: true, user, token }),
+                },
+                {
+                    request: [appHeader(SYMBOLS.LOAD_ASYNC_HEADER)('Authenticating User ...')],
+                    failure: [appHeader(SYMBOLS.ERROR_ASYNC_HEADER)('Authenticating User Failed ...')]
+                }
+            ),
             
-            revoke: commandFactory('[AUTH] REVOKE', {
-                onSuccess: () => ({ authentified: false, user: null, token: null }),
-            }),
+            revoke: commandFactory(
+                '[AUTH] REVOKE',
+                {
+                    onSuccess: () => ({ authentified: false, user: null, token: null }),
+                },
+                {
+                    request: [appHeader(SYMBOLS.LOAD_ASYNC_HEADER)('Revoking User ...')],
+                    failure: [appHeader(SYMBOLS.ERROR_ASYNC_HEADER)('Revoking User Failed ...')]
+                }
+            ),
         
         }
     );

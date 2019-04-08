@@ -9,11 +9,17 @@ import { AuthEffects } from './auth/effects';
 import { AuthStore } from './auth/store';
 import { AppEffects } from './app/effects';
 import { AppStore } from './app/store';
+import { StoreModule } from '@ngrx/store';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
   imports: [
     CommonModule,
-    EffectsModule.forFeature([
+    StoreModule.forRoot({}),
+    StoreRouterConnectingModule.forRoot(),
+    StoreDevtoolsModule.instrument({ maxAge: 100 }),
+    EffectsModule.forRoot([
         SampleEffects,
         StorageEffects,
         AuthEffects,

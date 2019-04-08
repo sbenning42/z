@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 export interface Todo {
   id: string;
   name: string;
+  status: number;
 }
 
 @Injectable({

@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { StorageStore } from 'src/app/core/state/storage/storage.store';
 import { Observable } from 'rxjs';
-import { Entries } from 'src/app/core/state/storage/storage.config';
 import { anchor } from 'src/app/core/zto/tools/anchor';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthStore } from 'src/app/core/stores/auth/store';
 import { Credentials, User } from 'src/app/core/stores/auth/config';
 import { AppStore } from 'src/app/core/stores/app/store';
+import { Entries } from 'src/app/core/stores/storage/config';
+import { StorageStore } from 'src/app/core/stores/storage/store';
 
 @Component({
   selector: 'app-home',
@@ -72,20 +72,16 @@ export class HomeComponent implements OnInit {
   }
 
   get() {
-    const { Request } = this.storage.actions.get;
-    this.storage.dispatch(new Request([this.anchor('get')]));
+    this.storage.dispatchs.get(undefined);
   }
   save(entries: Entries) {
-    const { Request } = this.storage.actions.save;
-    this.storage.dispatch(new Request(entries, [this.anchor('save')]));
+    this.storage.dispatchs.save(entries);
   }
   remove(keys: string[]) {
-    const { Request } = this.storage.actions.remove;
-    this.storage.dispatch(new Request(keys, [this.anchor('remove')]));
+    this.storage.dispatchs.remove(keys);
   }
   clear() {
-    const { Request } = this.storage.actions.clear;
-    this.storage.dispatch(new Request([this.anchor('clear')]));
+    this.storage.dispatchs.clear(undefined);
   }
 
 }

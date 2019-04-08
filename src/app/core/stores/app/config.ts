@@ -9,7 +9,8 @@ import {
     ZDocument,
     ZEvent,
     ZCommand,
-    NOOP
+    NOOP,
+    Header
 } from "../../z-store/z-store";
 
 export const type = 'APP';
@@ -34,6 +35,21 @@ export class AppError {
 
 export enum SYMBOLS {
     INITIALIZE_HEADER = '@initialize',
+    START_LOADING_HEADER = '@start-loading',
+    STOP_LOADING_HEADER = '@stop-loading',
+    CLEAR_LOADING_HEADER = '@clear-loading',
+    LOAD_ASYNC_HEADER = '@load-async',
+    START_ERROR_HEADER = '@start-error',
+    STOP_ERROR_HEADER = '@stop-error',
+    CLEAR_ERROR_HEADER = '@clear-error',
+    ERROR_ASYNC_HEADER = '@error-async',
+}
+
+export function appHeader(type: SYMBOLS) {
+    return (type === SYMBOLS.START_LOADING_HEADER
+        || type === SYMBOLS.LOAD_ASYNC_HEADER)
+            ? (title?: string, message?: string) => ({ type, data: new AppLoading(title, message) })
+            : (title?: string, message?: string, stack?: string) => ({ type, data: new AppError(title, message, stack) })
 }
 
 export interface State {

@@ -14,7 +14,10 @@ export class StorageEffects {
     
     @Effect({ dispatch: true })
     get = this.store.actions$.pipe(
-        async<void, Entries>(this.store.actions.get, () => this.storage.get())
+        async<void, Entries>(this.store.actions.get, () => {
+            this.storage.config({ errorRate: 0 });
+            return this.storage.get();
+        })
     );
     
     @Effect({ dispatch: true })
