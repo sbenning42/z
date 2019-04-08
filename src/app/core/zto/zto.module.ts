@@ -10,7 +10,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     imports: [
       CommonModule,
       StoreModule.forRoot({}),
-      EffectsModule.forRoot([]),
       StoreRouterConnectingModule.forRoot(),
       StoreDevtoolsModule.instrument({ maxAge: 100 }),
     ],

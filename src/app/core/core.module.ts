@@ -9,6 +9,9 @@ import { TodoService } from './services/todo/todo.service';
 import { InMemoryDataService } from './services/in-memory-data/in-memory-data.service';
 import { InMemoryWebApiModule } from 'angular-in-memory-web-api';
 import { ZtoModule } from './zto';
+import { EffectsModule } from '@ngrx/effects';
+import { StorageStore } from './state/storage/storage.store';
+import { StoresModule } from './stores/stores.module';
 
 @NgModule({
   imports: [
@@ -17,6 +20,7 @@ import { ZtoModule } from './zto';
     InMemoryWebApiModule.forRoot(InMemoryDataService),
     ZtoModule,
     StateModule,
+    StoresModule,
     SharedModule,
   ],
   declarations: [],

@@ -3,7 +3,7 @@ import { Header } from "../core/models/header";
 import { Headers } from "../core/types/headers";
 
 export function asHeaders(headers: HeadersType = []) {
-    return headers.map(header => {
+    return headers.filter(header => !!header).map(header => {
         if (typeof(header) === 'string') {
             return new Header(header);
         } else if ((header as Header).id === undefined) {

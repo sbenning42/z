@@ -79,7 +79,7 @@ export class StoreManager<ThisState, ThisActionsSchema extends ActionsSchema> {
                         super(
                             asRequestType(config.type),
                             payload,
-                            asHeaders(headers.concat(...config.staticHeaders['request']))
+                            asHeaders(headers.concat(ASYNC_HEADER, ...config.staticHeaders['request']))
                         );
                     }
                 }
@@ -89,7 +89,7 @@ export class StoreManager<ThisState, ThisActionsSchema extends ActionsSchema> {
                         super(
                             asRequestType(config.type),
                             undefined,
-                            asHeaders(headers.concat(...config.staticHeaders['request']))
+                            asHeaders(headers.concat(ASYNC_HEADER, ...config.staticHeaders['request']))
                         );
                     }
                 }
@@ -101,31 +101,31 @@ export class StoreManager<ThisState, ThisActionsSchema extends ActionsSchema> {
                             Request: config.hasPayload ? _AsyncRequestWithPayload : _AsyncRequestWithoutPayload,
                             Response: class extends ActionWithPayload<ThisActionsSchema[string]['Result']> {
                                 static type = asResponseType(config.type);
-                                constructor(payload: ThisActionsSchema[string]['Result'], headers: HeadersType = []) {
+                                constructor(payload: ThisActionsSchema[string]['Result'], public request: Action<ThisActionsSchema[string]['Payload']>, headers: HeadersType = []) {
                                     super(
                                         asResponseType(config.type),
                                         payload,
-                                        asHeaders(headers.concat(...config.staticHeaders['response']))
+                                        asHeaders(headers.concat(...request.headers.filter(header => header.followAsync), ...config.staticHeaders['response']))
                                     );
                                 }
                             },
                             Error: class extends ActionWithPayload<Error> {
                                 static type = asErrorType(config.type);
-                                constructor(payload: Error, headers: HeadersType = []) {
+                                constructor(payload: Error, public request: Action<ThisActionsSchema[string]['Payload']>, headers: HeadersType = []) {
                                     super(
                                         asErrorType(config.type),
                                         payload,
-                                        asHeaders(headers.concat(...config.staticHeaders['error']))
+                                        asHeaders(headers.concat(...request.headers.filter(header => header.followAsync), ...config.staticHeaders['error']))
                                     );
                                 }
                             },
                             Cancel: class extends ActionWithPayload<undefined> {
                                 static type = asCancelType(config.type);
-                                constructor(headers: HeadersType = []) {
+                                constructor(public request: Action<ThisActionsSchema[string]['Payload']>, headers: HeadersType = []) {
                                     super(
                                         asCancelType(config.type),
                                         undefined,
-                                        asHeaders(headers.concat(...config.staticHeaders['cancel']))
+                                        asHeaders(headers.concat(...request.headers.filter(header => header.followAsync), ...config.staticHeaders['cancel']))
                                     );
                                 }
                             },
